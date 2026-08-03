@@ -8,6 +8,7 @@ class LanguageManager:
         self.load_language(default_language)
 
     def load_language(self, language_code) -> bool:
+        """load language file"""
         if language_code == "en":
             return True
         try:
@@ -21,4 +22,5 @@ class LanguageManager:
             return False
 
     def _(self, key, default=None) -> str:
+        """get translate text"""
         return self.translations.get(key, default if default else key)

@@ -1,4 +1,12 @@
-"""Centralized platform + accelerator detection."""
+"""Centralized platform + accelerator detection.
+
+Imported once at startup to expose typed flags the rest of the codebase
+can branch on without re-querying `platform`, `torch.cuda`, or
+`onnxruntime.get_available_providers()` repeatedly.
+
+The banner printed by :func:`print_banner` is the single user-facing
+report of which code path the app will take.
+"""
 from __future__ import annotations
 
 import platform as _platform
@@ -13,7 +21,7 @@ IS_APPLE_SILICON: bool = IS_MACOS and _platform.machine() == "arm64"
 
 def _detect_torch_cuda() -> bool:
     try:
-        import torch
+        import torch  # noqa: WPS433 — local import, avoid hard dep at module load
         return bool(torch.cuda.is_available())
     except Exception:
         return False
@@ -34,6 +42,9 @@ HAS_COREML_PROVIDER: bool = "CoreMLExecutionProvider" in ONNX_PROVIDERS
 HAS_DML_PROVIDER: bool = "DmlExecutionProvider" in ONNX_PROVIDERS
 HAS_OPENVINO_PROVIDER: bool = "OpenVINOExecutionProvider" in ONNX_PROVIDERS
 
+# OpenVINO execution-provider config shared by every ONNX session builder.
+# AUTO:GPU,NPU,CPU lets OpenVINO pick the best available device in priority
+# order (Intel GPU → NPU → CPU).
 OPENVINO_PROVIDER_CONFIG = (
     "OpenVINOExecutionProvider",
     {"device_type": "AUTO:GPU,NPU,CPU"},
@@ -41,6 +52,11 @@ OPENVINO_PROVIDER_CONFIG = (
 
 
 def camera_backends() -> List[Tuple[int, int]]:
+    """Return an ordered list of ``(device_index, cv2_backend)`` attempts.
+
+    Windows prefers MSMF (60fps capable) with DirectShow as fallback.
+    macOS/Linux use the default backend (AVFoundation / V4L2).
+    """
     import cv2
     if IS_WINDOWS:
         return [
@@ -66,6 +82,7 @@ def accelerator_label() -> str:
 
 
 def print_banner() -> None:
+    """Print a one-line summary of the platform + accelerator selection."""
     os_label = f"{_platform.system()} {_platform.machine()}"
     print(
         f"[platform] {os_label} | python {sys.version.split()[0]} | "

@@ -37,6 +37,7 @@
     "Select target image": "Zielbild auswählen",
     "Please provide mapping!": "Bitte eine Zuordnung angeben!",
     "At least 1 source with target is required!": "Mindestens eine Quelle mit einem Ziel ist erforderlich!",
+    "At least 1 source with target is required!": "Mindestens eine Quelle mit einem Ziel ist erforderlich!",
     "Face could not be detected in last upload!": "Im letzten Upload konnte kein Gesicht erkannt werden!",
     "Select Camera:": "Kamera auswählen:",
     "All mappings cleared!": "Alle Zuordnungen gelöscht!",

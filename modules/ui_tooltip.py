@@ -4,6 +4,12 @@ import customtkinter as ctk
 
 
 class ToolTip:
+    """Show a floating tooltip popup when the user hovers over a widget.
+
+    Usage:
+        ToolTip(my_button, "Helpful description text")
+    """
+
     def __init__(self, widget: ctk.CTkBaseClass, text: str, delay: int = 500):
         self._widget = widget
         self._text = text
@@ -42,6 +48,7 @@ class ToolTip:
 
         tw.update_idletasks()
 
+        # Clamp to screen bounds
         screen_w = tw.winfo_screenwidth()
         screen_h = tw.winfo_screenheight()
         tip_w = tw.winfo_reqwidth()

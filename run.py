@@ -3,9 +3,13 @@
 import os
 import sys
 
+# Add the project root to PATH so bundled ffmpeg/ffprobe are found
 project_root = os.path.dirname(os.path.abspath(__file__))
 os.environ["PATH"] = project_root + os.pathsep + os.environ.get("PATH", "")
 
+# On Windows, register NVIDIA CUDA DLL directories so onnxruntime-gpu can
+# find cuDNN/cublas. Python 3.8+ ignores PATH for extension-module native deps —
+# os.add_dll_directory() is required. Also keep PATH for child processes/ffmpeg.
 if sys.platform == "win32":
     _site_packages = os.path.join(sys.prefix, "Lib", "site-packages")
     _venv_site_packages = os.path.join(project_root, "venv", "Lib", "site-packages")
@@ -26,18 +30,36 @@ if sys.platform == "win32":
                 os.add_dll_directory(_d)
             except (OSError, AttributeError):
                 pass
+
+    # On Windows, register OpenVINO DLL directories so onnxruntime's
+    # OpenVINOExecutionProvider can find openvino.dll.  This must happen
+    # before any ONNX InferenceSession is created.  Failure is non-fatal:
+    # OpenVINO simply isn't installed, and onnxruntime will fall back to CPU.
     try:
-        from onnxruntime.tools.add_openvino_win_libs import (
+        from onnxruntime.tools.add_openvino_win_libs import (  # type: ignore[import-untyped]  # noqa: E501
             add_openvino_libs_to_path,
         )
         add_openvino_libs_to_path()
     except ImportError:
+        # onnxruntime build without the OpenVINO tooling module — no-op.
         pass
     except FileNotFoundError:
+        # OpenVINO site-packages dir absent — no-op.
         pass
     except SystemExit as exc:
-        print(f"[startup] OpenVINO DLL registration skipped: {exc}", flush=True)
+        # add_openvino_libs_to_path() calls sys.exit() when OpenVINO libs
+        # can't be located (e.g. OPENVINO_LIB_PATHS unset).  Log the message
+        # it raised with so the failure is visible, but keep startup alive.
+        print(
+            f"[startup] OpenVINO DLL registration skipped: {exc}",
+            flush=True,
+        )
 
+# On Linux, pre-load NVIDIA shared libraries (cuDNN, cuBLAS, nvrtc...) shipped
+# inside the venv via pip wheels (nvidia-cudnn-cu12, etc.). LD_LIBRARY_PATH
+# cannot be set after Python starts, so we use ctypes.CDLL with RTLD_GLOBAL
+# instead. This makes symbols available to onnxruntime when it dlopens its
+# CUDA provider.
 if sys.platform.startswith("linux"):
     import ctypes
     import glob
@@ -54,6 +76,8 @@ if sys.platform.startswith("linux"):
             _lib_dir = os.path.join(_nvidia_dir, _pkg, "lib")
             if not os.path.isdir(_lib_dir):
                 continue
+            # Also expose the directory to child processes, without
+            # duplicating an entry that is already present.
             _ldp = os.environ.get("LD_LIBRARY_PATH", "")
             if _lib_dir not in _ldp.split(os.pathsep):
                 os.environ["LD_LIBRARY_PATH"] = (
