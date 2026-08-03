@@ -281,7 +281,7 @@ All rights reserved. © DeepLiveCam PRO
 
 ---
 
-### Free (DIY) — manual installation
+### 🆓 Free (DIY) — manual installation
 
 Open-source / free path for **advanced users only**.  
 No ready build, no course, no automatic install, no priority support.
@@ -289,7 +289,7 @@ No ready build, no course, no automatic install, no priority support.
 Prefer the easy way? → **[Buy DeepLiveCam PRO](https://sdcourse.tb.ru/deeplivecam)**
 
 <details>
-<summary><b>Click to expand: free manual install · usage · models · CLI</b></summary>
+<summary><b>⬇️ Click to expand: free manual install · usage · models · CLI</b></summary>
 
 <br>
 
