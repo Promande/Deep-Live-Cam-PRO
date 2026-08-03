@@ -1,0 +1,60 @@
+name: Emoji Free DIY heading
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - '.github/workflows/readme-emoji-free.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Add emoji to Free section
+        run: |
+          set -euo pipefail
+          python3 << 'PY'
+          from pathlib import Path
+          p = Path("README.md")
+          t = p.read_text(encoding="utf-8")
+          t2 = t.replace(
+              "### Free (DIY) — manual installation",
+              "### 🆓 Free (DIY) — manual installation",
+              1,
+          )
+          t2 = t2.replace(
+              "<summary><b>Click to expand: free manual install · usage · models · CLI</b></summary>",
+              "<summary><b>⬇️ Click to expand: free manual install · usage · models · CLI</b></summary>",
+              1,
+          )
+          if t2 == t:
+              # already applied or different dashes
+              t2 = t.replace("### Free (DIY)", "### 🆓 Free (DIY)", 1)
+              t2 = t2.replace(
+                  "Click to expand: free manual install",
+                  "⬇️ Click to expand: free manual install",
+                  1,
+              )
+          p.write_text(t2, encoding="utf-8")
+          print("changed", t2 != t)
+          assert "🆓 Free (DIY)" in t2 or "### 🆓" in t2
+          PY
+
+      - name: Commit
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add README.md
+          if git diff --cached --quiet; then
+            echo no changes
+          else
+            git commit -m "Make Free DIY section more visible with emoji"
+            git push
+          fi
