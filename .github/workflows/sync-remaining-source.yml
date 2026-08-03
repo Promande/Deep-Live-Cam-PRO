@@ -1,0 +1,54 @@
+name: Sync remaining source
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - '.github/workflows/sync-remaining-source.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout target
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Pull remaining files from sibling fork (public raw)
+        run: |
+          set -euo pipefail
+          BASE="https://raw.githubusercontent.com/Promande/Deep-Live-Cam-PRO/main"
+          FILES=(
+            "modules/face_analyser.py"
+            "modules/core.py"
+            "modules/onnx_optimize.py"
+            "modules/ui.py"
+            "modules/processors/frame/core.py"
+            "modules/processors/frame/face_enhancer.py"
+            "modules/processors/frame/face_masking.py"
+            "modules/processors/frame/face_swapper.py"
+            "LICENSE"
+          )
+          for f in "${FILES[@]}"; do
+            mkdir -p "$(dirname "$f")"
+            echo "Fetching $f"
+            curl -fsSL "$BASE/$f" -o "$f"
+            # basic sanity: non-empty
+            test -s "$f"
+          done
+
+      - name: Commit and push if changed
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add modules LICENSE || true
+          if git diff --cached --quiet; then
+            echo "No changes"
+          else
+            git commit -m "Sync remaining core modules and LICENSE"
+            git push
+          fi
