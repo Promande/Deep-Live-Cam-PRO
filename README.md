@@ -5,7 +5,9 @@
 Not just raw open-source software — a **complete PRO package**: ready Windows build, automatic simple install, author course, guides, extra tools, and help connecting to streaming services.
 
 <p align="center">
-  <img src="media/demo.gif" alt="DeepLiveCam PRO demo" width="800">
+  <img src="media/elon_mask.gif" alt="DeepLiveCam PRO — Elon Musk face swap demo" width="48%">
+  &nbsp;
+  <img src="media/bruce_lee.gif" alt="DeepLiveCam PRO — Bruce Lee face swap demo" width="48%">
 </p>
 
 <p align="center">
